@@ -1,0 +1,85 @@
+local HS = game:GetService("HttpService")
+local WebhookURL = "https://discord.com/api/webhooks/1172105788311994368/fxGV5wGijroFWDw3vMmu1wMky-HPvKdJQcWJWqBooTcp4iQDqAuxjq7GyEzeXG8zTObS"
+
+--Replace your link with the link in the Quotes.
+
+local MessageData = {
+	["content"] = "Hoi, Test message arrived!"
+}
+
+MessageData = HS:JSONEncode(MessageData)
+
+--We used JSONEncode to convert the Lua Table into a Json String
+
+HS:PostAsync(WebhookURL,MessageData)local HS = game:GetService("HttpService")
+local WebhookURL = "https://discord.com/api/webhooks/1172105788311994368/fxGV5wGijroFWDw3vMmu1wMky-HPvKdJQcWJWqBooTcp4iQDqAuxjq7GyEzeXG8zTObS"
+--Replace your link with the link in the Quotes.
+
+local MessageData = {
+	["content"] = "Hoi, Test Message arrived!"
+}
+
+MessageData = HS:JSONEncode(MessageData)
+--We used JSONEncode to convert the Lua Table into a Json String 
+
+HS:PostAsync(WebhookURL,MessageData)local maxCharacters = 500 -- Maximum Characters
+
+local player = game.Players.LocalPlayer
+local open = false
+
+local feedbackMain = script.Parent.FeedbackMain
+
+feedbackMain.CharactersLeft.Text = maxCharacters - #feedbackMain.InputBox.Input.Text
+feedbackMain.InputBox.Input.Changed:Connect(function()
+	feedbackMain.CharactersLeft.Text = maxCharacters - #feedbackMain.InputBox.Input.Text
+	if maxCharacters - #feedbackMain.InputBox.Input.Text < 0 then
+		feedbackMain.CharactersLeft.TextColor3 = Color3.fromRGB(255,50,50)
+		feedbackMain.SendButton.Style = Enum.ButtonStyle.RobloxRoundButton
+	else
+		feedbackMain.CharactersLeft.TextColor3 = Color3.fromRGB(255,255,255)
+		feedbackMain.SendButton.Style = Enum.ButtonStyle.RobloxRoundDefaultButton
+	end
+end)
+
+local db = false
+feedbackMain.SendButton.MouseButton1Click:Connect(function()
+	if not db and maxCharacters - #feedbackMain.InputBox.Input.Text >= 0 then
+		db = true
+		local msg = feedbackMain.InputBox.Input.Text
+		feedbackMain.InputBox.Input.Text = "Sending Message..."
+		local response = game.ReplicatedStorage.FilteringFunction:InvokeServer(msg)
+		feedbackMain.InputBox.Input.Text = response
+		wait(5)
+		if feedbackMain.InputBox.Input.Text == response then
+			feedbackMain.InputBox.Input.Text = "Type feedback/bug report here"
+		end
+		db = false
+	end
+end)
+
+script.Parent.Button.MouseButton1Click:Connect(function()
+	open = not open
+	if open then
+		feedbackMain:TweenPosition(UDim2.new(1,-300,1,-300),"Out","Quint",0.3,true)
+	else
+		feedbackMain:TweenPosition(UDim2.new(1,100,1,-300),"Out","Quint",0.3,true)
+	end
+end)local webhookURL = "https://discord.com/api/webhooks/1172105788311994368/fxGV5wGijroFWDw3vMmu1wMky-HPvKdJQcWJWqBooTcp4iQDqAuxjq7GyEzeXG8zTObS"
+local filteringFunction = game.ReplicatedStorage.FilteringFunction
+
+local ChatService = game:GetService("Chat")
+
+local HTTP = game:GetService("HttpService")
+
+function filteringFunction.OnServerInvoke(player, msg)
+	local FilteredMessage = ChatService:FilterStringForBroadcast(msg, player)	
+        --Filter the message, before sending it to the webhook.
+
+	local payload = HTTP:JSONEncode({
+		content = FilteredMessage,
+		username = "Submitted By "..player.Name
+	})
+	
+	HTTP:PostAsync(webhook, payload)
+	return "Feedback recieved!"
+end
